@@ -1,0 +1,34 @@
+let src = cv.imread('canvasInput');
+let dst = cv.Mat.zeros(src.rows, src.cols, cv.CV_8UC3);
+cv.cvtColor(src, src, cv.COLOR_RGBA2GRAY, 0);
+cv.threshold(src, src, 120, 200, cv.THRESH_BINARY);
+let contours = new cv.MatVector();
+let hierarchy = new cv.Mat();
+cv.findContours(src, contours, hierarchy, cv.RETR_CCOMP, cv.CHAIN_APPROX_SIMPLE);
+
+// Define colors for different shapes
+let colors = [
+    new cv.Scalar(0, 0, 255),   // 원은 파랑색
+    new cv.Scalar(0, 255, 0),   // 삼각형은 초록색
+    new cv.Scalar(128, 0, 128),   // 오각형은 보라색
+    new cv.Scalar(255, 0, 0)  // 사각형은 빨강색
+];
+
+// Define shape names
+let shapeNames = ["Circle", "Triangle", "Pentagon", "Square"];
+
+for (let i = 0; i < contours.size(); ++i) {
+    let colorIndex = i % colors.length; // Assign colors cyclically
+    cv.drawContours(dst, contours, i, colors[colorIndex], 1, cv.LINE_8, hierarchy, 100);
+
+    // Get the bounding rectangle around the contour
+    let rect = cv.boundingRect(contours.get(i));
+
+    // Calculate the position for the text
+    let textPosition = new cv.Point(rect.x, rect.y - 10); // Adjust Y position for text
+
+    // Add text with a shadow effect
+    cv.putText(dst, shapeNames[colorIndex], textPosition, cv.FONT_HERSHEY_SIMPLEX, 0.5, colors[colorIndex], 2);
+}
+cv.imshow('canvasOutput', dst);
+src.delete(); dst.delete(); contours.delete(); hierarchy.delete();
